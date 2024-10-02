@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px;
+        }
+        .color-display {
+            width: 200px;
+            height: 100px;
+            margin-bottom: 20px;
+            border: 1px solid #000;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 800px;
+        }
+        .model {
+            margin: 10px;
+        }
+        .model input {
+            width: 60px;
+        }
+        .warning {
+            color: red;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Color Converter</h1>
+    <div class="color-display" id="colorDisplay"></div>
+    <input type="color" id="colorPicker">
+    <div class="controls">
+        <div class="model" id="rgbModel">
+            <h3>RGB</h3>
+            <label>R: <input type="number" id="rInput" min="0" max="255" value="0"></label><br>
+            <label>G: <input type="number" id="gInput" min="0" max="255" value="0"></label><br>
+            <label>B: <input type="number" id="bInputRgb" min="0" max="255" value="0"></label>
+        </div>
+        <div class="model" id="xyzModel">
+            <h3>XYZ</h3>
+            <label>X: <input type="number" id="xInput" min="0" max="95.05" step="0.01" value="0"></label><br>
+            <label>Y: <input type="number" id="yInput" min="0" max="100" step="0.01" value="0"></label><br>
+            <label>Z: <input type="number" id="zInput" min="0" max="108.89" step="0.01" value="0"></label>
+        </div>
+        <div class="model" id="labModel">
+            <h3>LAB</h3>
+            <label>L: <input type="number" id="lInput" min="0" max="100" step="0.01" value="0"></label><br>
+            <label>a: <input type="number" id="aInput" min="-128" max="127" step="0.01" value="0"></label><br>
+            <label>b: <input type="number" id="bInputLab" min="-128" max="127" step="0.01" value="0"></label>
+        </div>
+    </div>
+    <div class="warning" id="warning">Warning: Color conversion out of range. Values have been clamped.</div>
+
+    <script>
+        const colorDisplay = document.getElementById('colorDisplay');
+        const colorPicker = document.getElementById('colorPicker');
+        const warning = document.getElementById('warning');
+
+        const rgbInputs = {
+            r: document.getElementById('rInput'),
+            g: document.getElementById('gInput'),
+            b: document.getElementById('bInputRgb')
+        };
+
+        const xyzInputs = {
+            x: document.getElementById('xInput'),
+            y: document.getElementById('yInput'),
+            z: document.getElementById('zInput')
+        };
+
+        const labInputs = {
+            l: document.getElementById('lInput'),
+            a: document.getElementById('aInput'),
+            b: document.getElementById('bInputLab')
+        };
+
+        function hexToRgb(hex) {
+            const bigint = parseInt(hex.slice(1), 16);
+            const r = (bigint >> 16) & 255;
+            const g = (bigint >> 8) & 255;
+            const b = bigint & 255;
+            return { r, g, b };
+        }
+
+        function rgbToXyz(r, g, b) {
+            // Placeholder conversion
+            return { x: r / 255 * 95.05, y: g / 255 * 100, z: b / 255 * 108.89 };
+        }
+
+        function xyzToRgb(x, y, z) {
+            // Placeholder conversion
+            return { r: x / 95.05 * 255, g: y / 100 * 255, b: z / 108.89 * 255 };
+        }
+
+        function xyzToLab(x, y, z) {
+            // Placeholder conversion
+            return { l: y, a: (x / 95.05) * 127 - 50, b: (z / 108.89) * 127 - 50 };
+        }
+
+        function labToXyz(l, a, b) {
+            // Placeholder conversion
+            return { x: (a + 50) / 127 * 95.05, y: l, z: (b + 50) / 127 * 108.89 };
+        }
+
+        function updateDisplayFromRgb() {
+            const r = parseInt(rgbInputs.r.value) || 0;
+            const g = parseInt(rgbInputs.g.value) || 0;
+            const b = parseInt(rgbInputs.b.value) || 0;
+
+            colorDisplay.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+
+            const xyz = rgbToXyz(r, g, b);
+            xyzInputs.x.value = xyz.x.toFixed(2);
+            xyzInputs.y.value = xyz.y.toFixed(2);
+            xyzInputs.z.value = xyz.z.toFixed(2);
+
+            const lab = xyzToLab(xyz.x, xyz.y, xyz.z);
+            labInputs.l.value = lab.l.toFixed(2);
+            labInputs.a.value = lab.a.toFixed(2);
+            labInputs.b.value = lab.b.toFixed(2);
+
+            warning.style.display = (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) ? 'block' : 'none';
+        }
+
+        function updateDisplayFromXyz() {
+            const x = parseFloat(xyzInputs.x.value) || 0;
+            const y = parseFloat(xyzInputs.y.value) || 0;
+            const z = parseFloat(xyzInputs.z.value) || 0;
+
+            const rgb = xyzToRgb(x, y, z);
+            rgbInputs.r.value = Math.min(Math.max(Math.round(rgb.r), 0), 255);
+            rgbInputs.g.value = Math.min(Math.max(Math.round(rgb.g), 0), 255);
+            rgbInputs.b.value = Math.min(Math.max(Math.round(rgb.b), 0), 255);
+
+            const lab = xyzToLab(x, y, z);
+            labInputs.l.value = lab.l.toFixed(2);
+            labInputs.a.value = lab.a.toFixed(2);
+            labInputs.b.value = lab.b.toFixed(2);
+
+            colorDisplay.style.backgroundColor = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+        }
+
+        function updateDisplayFromLab() {
+            const l = parseFloat(labInputs.l.value) || 0;
+            const a = parseFloat(labInputs.a.value) || 0;
+            const b = parseFloat(labInputs.b.value) || 0;
+
+            const xyz = labToXyz(l, a, b);
+            xyzInputs.x.value = xyz.x.toFixed(2);
+            xyzInputs.y.value = xyz.y.toFixed(2);
+            xyzInputs.z.value = xyz.z.toFixed(2);
+
+            const rgb = xyzToRgb(xyz.x, xyz.y, xyz.z);
+            rgbInputs.r.value = Math.min(Math.max(Math.round(rgb.r), 0), 255);
+            rgbInputs.g.value = Math.min(Math.max(Math.round(rgb.g), 0), 255);
+            rgbInputs.b.value = Math.min(Math.max(Math.round(rgb.b), 0), 255);
+
+            colorDisplay.style.backgroundColor = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+        }
+
+        function updateDisplayFromPicker() {
+            const hex = colorPicker.value;
+            const { r, g, b } = hexToRgb(hex);
+
+            rgbInputs.r.value = r;
+            rgbInputs.g.value = g;
+            rgbInputs.b.value = b;
+
+            updateDisplayFromRgb();
+        }
+
+        rgbInputs.r.addEventListener('input', updateDisplayFromRgb);
+        rgbInputs.g.addEventListener('input', updateDisplayFromRgb);
+        rgbInputs.b.addEventListener('input', updateDisplayFromRgb);
+        colorPicker.addEventListener('input', updateDisplayFromPicker);
+
+        xyzInputs.x.addEventListener('input', updateDisplayFromXyz);
+        xyzInputs.y.addEventListener('input', updateDisplayFromXyz);
+        xyzInputs.z.addEventListener('input', updateDisplayFromXyz);
+
+        labInputs.l.addEventListener('input', updateDisplayFromLab);
+        labInputs.a.addEventListener('input', updateDisplayFromLab);
+        labInputs.b.addEventListener('input', updateDisplayFromLab);
+
+        updateDisplayFromRgb();
+    </script>
+</body>
+</html>
